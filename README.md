@@ -1,1 +1,1 @@
-# DistributedComputing
+# Exercícios de Computação Distribuída
