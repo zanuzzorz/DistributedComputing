@@ -4,7 +4,6 @@ import requests, bottle, json, threading, time, sys
 
 peers = sys.argv[2:]
 messages = []
-# last = []
 
 @get('/')
 @view('index')
@@ -21,7 +20,7 @@ def new():
 def newMessage():
     user = request.forms.get('user')
     msg = request.forms.get('message')
-    messages.append((user, msg))
+    messages.append([user, msg])
     redirect('/')
 
 @get('/peers')
@@ -35,22 +34,19 @@ def index():
 def client():
     time.sleep(5)
     while True:
-        time.sleep(1)
+	time.sleep(1)
         np = []
         nm = []
-        x = []
         for p in peers:
             r = requests.get(p + '/peers')
-            m = requests.get(p + '/messages')
             np = np + json.loads(r.text)
-            nm = nm + json.loads(m.text)
-            time.sleep(1)
 
-        if len(messages) > 1:
-        	if messages[-1] != nm:
-        		messages.append(nm)
-        		time.sleep(10)
-
+            m = requests.get(p + '/messages')
+            nms = json.loads(m.text)
+	    for msg in nms:
+       		if msg not in messages:
+			messages.append(msg)
+	
         peers[:] = list(set(np + peers))
 
         print(peers)
