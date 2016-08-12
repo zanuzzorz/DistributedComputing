@@ -8,8 +8,8 @@ messages = []
 @get('/')
 @view('index')
 def index():
-    return {'messages': messages}
-    
+	return {'messages': messages}
+
 
 @get('/new')
 @view('new')
@@ -18,39 +18,38 @@ def new():
 
 @post('/sendMessage')
 def newMessage():
-    user = request.forms.get('user')
-    msg = request.forms.get('message')
-    messages.append([user, msg])
-    redirect('/')
+	user = request.forms.get('user')
+	msg = request.forms.get('message')
+	messages.append([user, msg])
+	redirect('/')
 
 @get('/peers')
 def index():
-    return json.dumps(peers)
+	return json.dumps(peers)
 
 @get('/messages')
 def index():
-    return json.dumps(messages)
+	return json.dumps(messages)
 
 def client():
-    time.sleep(5)
-    while True:
-	time.sleep(1)
-        np = []
-        nm = []
-        for p in peers:
-            r = requests.get(p + '/peers')
-            np = np + json.loads(r.text)
+	time.sleep(5)
+	while True:
+		np = []
+		nm = []
+		for p in peers:
+			r = requests.get(p + '/peers')
+			np = np + json.loads(r.text)
 
-            m = requests.get(p + '/messages')
-            nms = json.loads(m.text)
-	    for msg in nms:
-       		if msg not in messages:
-			messages.append(msg)
+			m = requests.get(p + '/messages')
+			nms = json.loads(m.text)
+			
+			for msg in nms:
+					if msg not in messages:
+						messages.append(msg)
 	
-        peers[:] = list(set(np + peers))
-
-        print(peers)
-        print(messages)
+		peers[:] = list(set(np + peers))
+		print(peers)
+		time.sleep(1)
 
 t = threading.Thread(target=client)
 t.start()
