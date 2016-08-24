@@ -65,7 +65,9 @@ def client_messages():
 					x = json.dumps(messages)			
 					load = json.loads(x)			
 					if msg not in messages and msg not in load:
+                                                incrementa()
 						messages.append(msg)
+						
 		#print(messages)
 		time.sleep(1)
 
