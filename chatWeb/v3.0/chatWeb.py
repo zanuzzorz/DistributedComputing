@@ -7,10 +7,17 @@ porta = int(sys.argv[1])
 
 messages = []
 
-tempo = 0
-def incrementa():
+tempo = [0] * (len(peers) + 1)
+
+def inc_tempo():
 	global tempo
-	tempo += 1
+	tempo[0] += 1
+
+
+@get('/clock')
+def index():
+	return json.dumps(tempo)
+
 
 @get('/')
 @view('index')
@@ -27,7 +34,7 @@ def new():
 def newMessage():
 	user = request.forms.get('user')
 	msg = request.forms.get('message')
-	incrementa()
+	inc_tempo()
 	messages.append([user, msg, dict({porta:tempo})])
 	redirect('/')
 
@@ -42,10 +49,26 @@ def index():
 	return json.dumps(messages)
 
 
-def client_peers():
+def sync_clock():
+	time.sleep(5)
+	while True:
+		nt = []
+		cont = 0
+		for p in peers:
+			if cont > 0:
+				t = requests.get(p + '/clock')
+				nt = nt + json.loads(t.text)
+				tempo[cont] = nt[0]
+			cont += 1
+		print(tempo)
+		time.sleep(1)
+
+
+def sync_peers():
 	time.sleep(5)
 	while True:
 		np = []
+		cont = 0
 		for p in peers:
 			r = requests.get(p + '/peers')
 			np = np + json.loads(r.text)
@@ -54,7 +77,7 @@ def client_peers():
 		time.sleep(1)
 
 
-def client_messages():
+def sync_messages():
 	time.sleep(5)
 	while True:
 		nm = []
@@ -63,18 +86,20 @@ def client_messages():
 			nms = json.loads(m.text)
 			for msg in nms:
 					x = json.dumps(messages)			
-					load = json.loads(x)			
+					load = json.loads(x)	
 					if msg not in messages and msg not in load:
-                                                incrementa()
 						messages.append(msg)
-						
-		#print(messages)
+		print(messages)
 		time.sleep(1)
 
-t = threading.Thread(target=client_peers)
-t.start()
+t1 = threading.Thread(target=sync_clock)
+t1.start()
 
-t2 = threading.Thread(target=client_messages)
+t2 = threading.Thread(target=sync_peers)
 t2.start()
+
+t3 = threading.Thread(target=sync_messages)
+t3.start()
+
 
 run(host='localhost', port= porta)
