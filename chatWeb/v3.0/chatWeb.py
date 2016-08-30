@@ -8,9 +8,9 @@ porta = int(sys.argv[1])
 messages = []
 
 tempo = [0] * (len(peers) + 1)
+#clock = []
 
 def inc_tempo():
-	global tempo
 	tempo[0] += 1
 
 
@@ -35,6 +35,7 @@ def newMessage():
 	user = request.forms.get('user')
 	msg = request.forms.get('message')
 	inc_tempo()
+	#clock = inc_tempo()
 	messages.append([user, msg, dict({porta:tempo})])
 	redirect('/')
 
@@ -87,6 +88,7 @@ def sync_messages():
 			for msg in nms:
 					x = json.dumps(messages)			
 					load = json.loads(x)	
+					#and (msg[0] not in messages and msg[1] not in messages)
 					if msg not in messages and msg not in load:
 						messages.append(msg)
 		print(messages)
