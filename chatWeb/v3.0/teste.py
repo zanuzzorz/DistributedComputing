@@ -33,7 +33,7 @@ def newMessage():
 	msg = request.forms.get('message')
 	#inc_tempo()
 	clock = inc_tempo()
-	messages.append([user, msg, dict({porta:tempo})])
+	messages.append([user, msg, dict({porta:clock})])
 	redirect('/')
 
 
@@ -61,12 +61,12 @@ def sync_clock():
 
 			t = requests.get(p + '/clock')
 			nt = nt + json.loads(t.text)
-
+			print("NTTTT")
+			print(nt)
 			if cont > 0:
 				tempo[cont] = nt[0]
-				#time.sleep(1)
-				if messages:
-					del messages[cont]
+				# if messages and len(messages) > 1:
+				# 	del messages[cont]
 			cont += 1
 		print(tempo)
 		time.sleep(1)
@@ -96,8 +96,12 @@ def sync_messages():
 					x = json.dumps(messages)			
 					load = json.loads(x)	
 					#and (msg[0] not in messages and msg[1] not in messages):
-					if msg not in messages and msg not in load and (msg[0] not in messages and msg[1] not in messages):
-						messages.append(msg)
+					if msg not in messages and msg not in load: 
+						# puts(msg[0])
+						# puts(msg[1])
+						# puts(messages)
+						if (msg[0] not in messages and msg[1] not in messages):
+							messages.append(msg)
 		print(messages)
 		time.sleep(1)
 
