@@ -6,13 +6,21 @@ peers = sys.argv[2:]
 porta = int(sys.argv[1])
 
 messages = []
+port_clock = {}
 
-tempo = [0] * (len(peers) + 1)
-clock = []
+tempo = 0
+
+#tempo = [0] * (len(peers) + 1)
+# def inc_tempo():
+# 	tempo[0] += 1
+# 	return tempo[:]
 
 def inc_tempo():
-	tempo[0] += 1
-	return tempo[:]
+	global tempo
+	tempo += 1
+
+def add_port_clock(p, c):
+	return port_clock.update(dict({p:c}))
 
 
 @get('/')
@@ -30,8 +38,13 @@ def new():
 def newMessage():
 	user = request.forms.get('user')
 	msg = request.forms.get('message')
-	clock = inc_tempo()
-	messages.append([user, msg, dict({porta:clock})])
+
+	clock = 0
+	if [user, msg, port_clock] not in messages:
+		clock = tempo + 1
+		add_port_clock(str(porta),clock)
+		messages.append([user, msg, str(port_clock) ])
+		inc_tempo()
 	redirect('/')
 
 
@@ -50,19 +63,29 @@ def index():
 	return json.dumps(tempo)
 
 
+@get('/port')
+def index():
+	return json.dumps(porta)
+
+
+
 def sync_clock():
 	time.sleep(5)
 	while True:
 		nt = []
-		cont = 0
 		for p in peers:
 
 			t = requests.get(p + '/clock')
-			nt = nt + json.loads(t.text)
-			if cont > 0:
-				tempo[cont] = nt[0]
-			cont += 1
+			nt = json.loads(t.text)
+			port = requests.get(p + '/port')
+			nport = json.loads(port.text)
+			if nt >= tempo:
+				add_port_clock(str(nport),nt)
+				# tempo = nt
+				# del messages[:-1]
+
 		print(tempo)
+		print(messages)
 		time.sleep(1)
 
 
@@ -82,16 +105,12 @@ def sync_peers():
 def sync_messages():
 	time.sleep(5)
 	while True:
-		nm = []
 		for p in peers:
 			m = requests.get(p + '/messages')
-			nms = json.loads(m.text)
-			for msg in nms:
-					x = json.dumps(messages)			
-					load = json.loads(x)	
-					if msg not in messages and msg not in load: 
-						if (msg[0] not in messages and msg[1] not in messages):
-							messages.append(msg)
+			for msg in json.loads(m.text):
+				if msg not in messages and msg != []: 
+					if (msg[0] not in messages and msg[1] not in messages):
+						messages.append(msg)
 		print(messages)
 		time.sleep(1)
 
