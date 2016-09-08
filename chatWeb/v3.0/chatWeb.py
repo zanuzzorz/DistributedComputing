@@ -26,7 +26,7 @@ def add_port_clock(p, c):
 @get('/')
 @view('index')
 def index():
-	return {'messages': messages}
+	return {'messages': messages, 'clock': str(tempo)}
 
 
 @get('/new')
@@ -73,16 +73,15 @@ def sync_clock():
 	time.sleep(5)
 	while True:
 		nt = []
+		global tempo
 		for p in peers:
-
 			t = requests.get(p + '/clock')
 			nt = json.loads(t.text)
 			port = requests.get(p + '/port')
 			nport = json.loads(port.text)
 			if nt >= tempo:
 				add_port_clock(str(nport),nt)
-				# tempo = nt
-				# del messages[:-1]
+				tempo = nt
 
 		print(tempo)
 		print(messages)
